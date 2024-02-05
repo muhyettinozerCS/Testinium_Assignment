@@ -23,8 +23,9 @@ public class Beymen {
     HomePage homePage;
     ProductPage productPage;
     CartPage cartPage;
-    private static String filePath = "/Users/muhyettinozer/IdeaProjects/Testinium_Assignment/test-data.xlsx";
+    private static String filePath = "src/resources/test-data.xlsx";
     private static String finalPrice;
+    private static String selectedProduct;
     private static int retryCount = 1;
 
     WebDriverWait wait;
@@ -43,65 +44,44 @@ public class Beymen {
 
     @Test
     public void fullTest() throws InterruptedException {
-        // TODO check naming conventions
         homePage.handleCookiesAndPopups();
         Assert.assertTrue(homePage.isPageOpened());
         searchProducts();
 
-
         while (!success) {
             try {
-                Thread.sleep(2000);
-                homePage.clickOnRandomProduct();
-                Thread.sleep(1500);
-
-                writeProductInfoToFile();
-                Thread.sleep(2000);
-
-                addProductToCart();
-                Thread.sleep(2000);
-
-                productPage.navigateToMyCartPage();
-                Thread.sleep(1000);
-                checkIfPricesAreSame();
-                Thread.sleep(2000);
-
+                productActions();
                 cartActions();
-
                 success = true;
-
             } catch (Exception e) {
-                if (retryCount < 5) {
-                    retryCount++;
-                    Thread.sleep(2000);
-                    cartPage.emptyCart();
-                    driver.navigate().back();
-                    Thread.sleep(2000);
-                    driver.navigate().back();
-                    Thread.sleep(2000);
-                }
-                else
-            {
-                System.out.println("Error: Cart Actions failed " + retryCount + " times. Will try again.");
-                success = true;
-            }
+                if (retryCount < 6) {
 
+                    emptyCartAndGoBackToRetry();
+                } else {
+                    System.out.println("Error: Cart Actions failed " + retryCount + " times. Will try again.");
+                    success = true;
+                }
             }
         }
+    }
 
+    public void emptyCartAndGoBackToRetry() throws InterruptedException {
+        System.out.println("Since product '" + selectedProduct + "' could not be found, a new product is being tried.");
+        retryCount++;
+
+        cartPage.emptyCart();
+
+        driver.navigate().back();
+        driver.navigate().back();
     }
 
     private void productActions() throws InterruptedException {
-        Thread.sleep(2000);
-        homePage.clickOnRandomProduct();
-        Thread.sleep(1500);
 
+        homePage.clickOnRandomProduct();
         writeProductInfoToFile();
         addProductToCart();
-
-        Thread.sleep(1000);
         productPage.navigateToMyCartPage();
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         checkIfPricesAreSame();
     }
 
@@ -109,20 +89,20 @@ public class Beymen {
         int targetQuantity = 2;
         cartPage.increaseQuantity(targetQuantity);
 
-        Thread.sleep(1000);
-        Assert.assertEquals(cartPage.getSelectedQuantity(), String.valueOf(targetQuantity));
-        Thread.sleep(1000);
+        String quantityErrorMessage = "Error: The selected quantity does not match the target quantity.";
+        Assert.assertEquals(quantityErrorMessage, String.valueOf(targetQuantity), cartPage.getSelectedQuantity());
+
+        String cartEmptyErrorMessage = "Error: The cart is not empty after attempting to empty it.";
         cartPage.emptyCart();
-        Assert.assertEquals(cartPage.isCartEmpty(), true);
+        Assert.assertEquals(cartEmptyErrorMessage, true, cartPage.isCartEmpty());
     }
 
     private void checkIfPricesAreSame() {
         Assert.assertEquals(finalPrice, cartPage.parsePrice());
-        System.out.println("final price: " + finalPrice);
-        System.out.println("cart price: " + cartPage.parsePrice());
     }
 
     private void addProductToCart() {
+        selectedProduct = productPage.productName.getText();
         productPage.clickOnAvailableProduct();
         productPage.clickAddToCartButton();
         finalPrice = productPage.finalPrice();
@@ -161,5 +141,4 @@ public class Beymen {
         TimeUnit.SECONDS.sleep(2);
         driver.quit();
     }
-
 }

@@ -9,6 +9,8 @@ import org.openqa.selenium.support.ui.Select;
 
 import java.util.List;
 
+import static com.testinium.utils.Helper.waitUntilElementVisible;
+
 public class CartPage {
     private WebDriver driver;
     @FindBy(css = ".m-orderSummary__item.-grandTotal .m-orderSummary__value")
@@ -18,6 +20,7 @@ public class CartPage {
 
     @FindBy(id = "removeCartItemBtn0-key-0")
     private WebElement emptyCart;
+
     @FindBy(id = "emtyCart")
     private WebElement cartIsEmptyInfoBox;
 
@@ -32,7 +35,6 @@ public class CartPage {
         // strip currency at the end of grand total price
         return grandTotalPrice.getText().split(" ")[0];
     }
-
 
     /**
      * @param quantity Increase quantity by the amount passed
@@ -49,7 +51,6 @@ public class CartPage {
         } else {
             throw new NotFoundException();
         }
-
     }
 
     private boolean isStockAvailable(int quantity, List<WebElement> options) {
@@ -62,11 +63,11 @@ public class CartPage {
     }
 
     public void emptyCart() {
-        emptyCart.click();
+        waitUntilElementVisible(driver, emptyCart).click();
     }
 
     public boolean isCartEmpty() {
-        return cartIsEmptyInfoBox.isDisplayed();
+        return waitUntilElementVisible(driver, cartIsEmptyInfoBox).isDisplayed();
     }
 
     public String getSelectedQuantity() {
