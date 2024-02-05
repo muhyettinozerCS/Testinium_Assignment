@@ -81,7 +81,7 @@ public class Beymen {
         writeProductInfoToFile();
         addProductToCart();
         productPage.navigateToMyCartPage();
-        Thread.sleep(2000);
+        Thread.sleep(3000);
         checkIfPricesAreSame();
     }
 
